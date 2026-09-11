@@ -31,8 +31,10 @@
   --font-mono: var(--font-mono);
 }
 
-body {
+html, body {
   background: var(--color-background);
   color: var(--color-text);
   font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  width: 100%;
 }

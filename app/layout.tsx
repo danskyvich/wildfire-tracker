@@ -21,7 +21,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  colorScheme: 'dark'
+  colorScheme: 'dark',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -30,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full dark antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex w-[100%] h-[100%] flex-col">{children}</body>
     </html>
   );
 }
