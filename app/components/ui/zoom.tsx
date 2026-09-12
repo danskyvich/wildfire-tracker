@@ -1,6 +1,6 @@
 import { Compass, Minus, Plus } from "lucide-react";
 
-export function Zoom({map}: {map: maplibregl.Map | null}) {
+export default function Zoom({map}: {map: maplibregl.Map | null}) {
   //check if the basemap exist
   if (!map) return null;
 

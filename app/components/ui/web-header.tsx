@@ -1,6 +1,6 @@
 import { useCurrentTime } from "../../hooks/useCurrentTime";
 
-export function WebHeader() {
+export default function WebHeader() {
 
     const value = useCurrentTime();
 

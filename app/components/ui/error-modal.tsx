@@ -6,7 +6,7 @@ interface ErrorModalProps {
     duration?: number,
 }
 
-export function ErrorModal({message, duration = 5000}: ErrorModalProps) {
+export default function ErrorModal({message, duration = 5000}: ErrorModalProps) {
 
     const [dismissedMessage, setDismissMessage] = useState<string | null>(null);
 

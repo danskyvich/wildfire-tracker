@@ -5,7 +5,7 @@ import * as maplibregl from "maplibre-gl";
 import { BASEMAP } from "@deck.gl/carto";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getUserLocation } from "../libs/location/geolocation";
-import { ErrorModal } from "./ui/error-modal";
+import ErrorModal from "./ui/error-modal";
 
 interface InteractiveMapProps {
   getLiftedMap: (map: maplibregl.Map) => void;
@@ -21,7 +21,7 @@ function checkWebGLSupport(): boolean {
   );
 }
 
-export function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
+export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [webglSupported] = useState(checkWebGLSupport);
@@ -92,6 +92,13 @@ export function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
         center: [longitude ?? 121.05, latitude ?? 14.65], //default to Quezon City
         zoom: 6,
       });
+
+      const scale = new maplibregl.ScaleControl({
+        maxWidth: 100,
+        unit: 'metric'
+      });
+
+      map.addControl(scale, 'bottom-left')
 
       // wait for the point to load before adding it to basemap as a layer.
       await loadMap(map);
