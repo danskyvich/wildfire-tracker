@@ -6,6 +6,8 @@ import SearchField from "./components/ui/search-field";
 import { SearchIcon } from "lucide-react";
 import { WebHeader } from "./components/ui/web-header";
 import { Zoom } from "./components/ui/zoom";
+import { useEffect, useState } from "react";
+import { getUserLocation } from "./libs/location/geolocation";
 
 export default function Home() {
   return (

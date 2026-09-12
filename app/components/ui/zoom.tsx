@@ -20,7 +20,7 @@ export function Zoom() {
       <div className="grid grid-cols-3 w-fit h-fit auto-cols-max bg-white rounded-md items-center justify-center pointer-events-auto">
         {ZOOM_BUTTONS.map((item, id) => (
           <div
-            className={`${item.className} flex w-full h-full text-black hover:bg-slate-200 active:bg-slate-300`}
+            className={`${item.className} flex w-full h-full text-black hover:bg-slate-200 active:bg-slate-300 items-center justify-center`}
             key={id}
           >
             <p>{item.icon}</p>
