@@ -129,7 +129,7 @@ export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, [latitude, longitude, locationEnabled]);
+  }, [latitude, longitude, locationEnabled, getLiftedMap]);
 
   return (
     <>
