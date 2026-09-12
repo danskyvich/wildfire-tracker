@@ -10,9 +10,12 @@ import { useEffect, useState } from "react";
 import { getUserLocation } from "./libs/location/geolocation";
 
 export default function Home() {
+  // get the map from InteractiveMap
+  const [map, setMap] = useState<maplibregl.Map | null>(null);
+
   return (
     <div className="flex w-full h-full">
-      <InteractiveMap />
+      <InteractiveMap getLiftedMap={setMap}/>
 
       {/* Floating container for UI */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none flex justify-between">
@@ -47,7 +50,7 @@ export default function Home() {
           <div />
 
           <div className="flex items-end justify-end pr-5 w-full h-full">
-            <Zoom />
+            <Zoom map={map}/>
           </div>
         </div>
       </div>

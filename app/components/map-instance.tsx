@@ -7,6 +7,10 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { getUserLocation } from "../libs/location/geolocation";
 import { ErrorModal } from "./ui/error-modal";
 
+interface InteractiveMapProps {
+  getLiftedMap: (map: maplibregl.Map) => void;
+}
+
 function checkWebGLSupport(): boolean {
   if (typeof window === "undefined") return true;
   const canvas = document.createElement("canvas");
@@ -17,7 +21,7 @@ function checkWebGLSupport(): boolean {
   );
 }
 
-export function InteractiveMap() {
+export function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [webglSupported] = useState(checkWebGLSupport);
@@ -92,6 +96,8 @@ export function InteractiveMap() {
       // wait for the point to load before adding it to basemap as a layer.
       await loadMap(map);
 
+      getLiftedMap(map);
+
       if (locationEnabled) {
        map.addLayer({
          id: "user_location_point",
@@ -121,7 +127,7 @@ export function InteractiveMap() {
   return (
     <>
       {error && <ErrorModal message={error} />}
-      <div ref={mapContainer} className="relative w-dvw h-dvh" />
+      <div ref={mapContainer} id="map-canvas" className="relative w-dvw h-dvh" />
     </>
   );
 }
