@@ -30,7 +30,7 @@ export default function Home() {
 
           {/* Middle */}
           <div className="flex justify-start items-center">
-            <Sidebar />
+            <Sidebar map={map}/>
           </div>
           <div />
           <div />
