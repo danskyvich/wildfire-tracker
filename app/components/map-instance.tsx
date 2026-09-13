@@ -6,9 +6,11 @@ import { BASEMAP } from "@deck.gl/carto";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getUserLocation } from "../libs/location/geolocation";
 import ErrorModal from "./ui/error-modal";
+import { clearMeasureState, createMeasureState, toggleMeasurePoint } from "../libs/location/measure/distance";
 
 interface InteractiveMapProps {
   getLiftedMap: (map: maplibregl.Map) => void;
+  isMeasuring: boolean;
 }
 
 function checkWebGLSupport(): boolean {
@@ -21,14 +23,24 @@ function checkWebGLSupport(): boolean {
   );
 }
 
-export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
+export default function InteractiveMap({ getLiftedMap, isMeasuring }: InteractiveMapProps) {
+  // map containers
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+
+  // webgl checks
   const [webglSupported] = useState(checkWebGLSupport);
   const [error, setError] = useState<string | null>(null);
+
+  // geolocation API
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [locationEnabled, setLocationEnabled] = useState<boolean | null>(null);
+
+  // for measuring distance
+  const measureRef = useRef(createMeasureState());
+  const isMeasuringRef = useRef(isMeasuring);
+  const distanceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // prompt the user to enable their location w/ consent
@@ -48,7 +60,6 @@ export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
   }, []);
 
   if (!webglSupported) {
-    // throw during render -> caught by nearest error.tsx boundary
     throw new Error("WebGL is not available in this browser/environment.");
   }
 
@@ -77,11 +88,70 @@ export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
               ],
             },
           });
+          map.addSource("geojson", {
+            type: "geojson",
+            data: measureRef.current.geojson,
+          });
+
+          map.addLayer({
+            id: "measure-points",
+            type: "circle",
+            source: "geojson",
+            paint: { "circle-radius": 5, "circle-color": "#000" },
+            filter: ["in", "$type", "Point"],
+          });
+
+          map.addLayer({
+            id: "measure-lines",
+            type: "line",
+            source: "geojson",
+            layout: { "line-cap": "round", "line-join": "round" },
+            paint: { "line-color": "#ffffff", "line-width": 2.5 },
+            filter: ["in", "$type", "LineString"],
+          });
+
+          map.on('click', (e) => {
+            if (!isMeasuringRef.current) return;
+
+            const features = map.queryRenderedFeatures(e.point, {
+              layers: ["measure-points"]
+            });
+            const { geojson, distanceKm } = toggleMeasurePoint(
+              measureRef.current,
+              features[0]?.properties?.id,
+              e.lngLat,
+            );
+
+            if (distanceRef.current) {
+              distanceRef.current.innerHTML = '';
+              if (distanceKm !== null) {
+                const value = document.createElement("pre");
+                value.textContent = `Total distance: ${distanceKm.toLocaleString()} km`;
+                distanceRef.current.appendChild(value);
+              }
+            };
+
+            (map.getSource("geojson") as maplibregl.GeoJSONSource).setData(geojson);
+          })
+
+          map.on("mousemove", (e) => {
+            if (!isMeasuringRef.current) {
+              map.getCanvas().style.cursor = "";
+              return;
+            }
+            const features = map.queryRenderedFeatures(e.point, {
+              layers: ["measure-points"],
+            });
+            map.getCanvas().style.cursor = features.length
+              ? "pointer"
+              : "crosshair";
+          });
+
           resolve();
         }),
       );
 
-      // this function loads the basemap itself
+    // this function loads the basemap itself
     async function initMap() {
       if (!mapContainer.current || mapRef.current) return;
 
@@ -95,10 +165,10 @@ export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
 
       const scale = new maplibregl.ScaleControl({
         maxWidth: 100,
-        unit: 'metric'
+        unit: "metric",
       });
 
-      map.addControl(scale, 'bottom-left')
+      map.addControl(scale, "bottom-left");
 
       // wait for the point to load before adding it to basemap as a layer.
       await loadMap(map);
@@ -106,17 +176,17 @@ export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
       getLiftedMap(map);
 
       if (locationEnabled) {
-       map.addLayer({
-         id: "user_location_point",
-         type: "circle",
-         source: "user_location",
-         paint: {
-           "circle-radius": 5,
-           "circle-color": "#1971ff",
-           "circle-stroke-width": 2,
-           "circle-stroke-color": "#619eff",
-         },
-       }); 
+        map.addLayer({
+          id: "user_location_point",
+          type: "circle",
+          source: "user_location",
+          paint: {
+            "circle-radius": 5,
+            "circle-color": "#1971ff",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#619eff",
+          },
+        });
       }
 
       // assign map to an element
@@ -131,10 +201,29 @@ export default function InteractiveMap({getLiftedMap}: InteractiveMapProps) {
     };
   }, [latitude, longitude, locationEnabled]);
 
+  useEffect(() => {
+    isMeasuringRef.current = isMeasuring;
+
+    if (!isMeasuring && mapRef.current) {
+      clearMeasureState(measureRef.current);
+      const source = mapRef.current.getSource("geojson") as
+        | maplibregl.GeoJSONSource
+        | undefined;
+      source?.setData(measureRef.current.geojson);
+      if (distanceRef.current) distanceRef.current.innerHTML = "";
+    }
+  }, [isMeasuring]);
+
   return (
     <>
       {error && <ErrorModal message={error} />}
-      <div ref={mapContainer} id="map-canvas" className="relative w-dvw h-dvh" />
+      <div className="relative w-dvw h-dvh">
+        <div ref={mapContainer} id="map-canvas" className="w-full h-full" />
+        <div
+          ref={distanceRef}
+          className="absolute bg-background px-2 py-1 border border-white rounded-lg bottom-10 left-4 pointer-events-none text-white z-10"
+        />
+      </div>
     </>
   );
 }

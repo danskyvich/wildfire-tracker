@@ -11,10 +11,14 @@ import { useState } from "react";
 export default function Home() {
   // get the map from InteractiveMap
   const [map, setMap] = useState<maplibregl.Map | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  //toggle for measure-distance feature
+  const isMeasuring = activeIndex === 3;
 
   return (
     <div className="flex w-full h-full">
-      <InteractiveMap getLiftedMap={setMap} />
+      <InteractiveMap getLiftedMap={setMap} isMeasuring={isMeasuring}/>
 
       {/* Floating container for UI */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none flex justify-between">
@@ -30,7 +34,7 @@ export default function Home() {
 
           {/* Middle */}
           <div className="flex justify-start items-center">
-            <Sidebar map={map}/>
+            <Sidebar map={map} onIndex={setActiveIndex} activeIndex={activeIndex}/>
           </div>
           <div />
           <div />

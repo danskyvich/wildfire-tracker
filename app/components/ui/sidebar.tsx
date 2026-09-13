@@ -5,11 +5,16 @@ import { getUserLocation } from '@/app/libs/location/geolocation';
 import Legends from './legends';
 import Layer from "./layers"
 import WebAppPage from './web-app-page';
+import ErrorModal from './error-modal';
 
-export default function Sidebar({map}: {map: maplibregl.Map | null}) {
+interface SidebarProps {
+  map: maplibregl.Map | null,
+  activeIndex: number | null,
+  onIndex: (activeIndex: number | null) => void;
+}
 
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [toggle, setToggle] = useState<string | null>(null);
+export default function Sidebar({map, activeIndex, onIndex}: SidebarProps) {
+
   const [error, setError] = useState<string | null>(null);
   const [lat, setLat] = useState<number>(0);
   const [long, setLong] = useState<number>(0);
@@ -64,29 +69,29 @@ export default function Sidebar({map}: {map: maplibregl.Map | null}) {
       essential: true,
     });
   }
-
   if (!map) return;
     return (
       <>
+        {error && <ErrorModal message={error} />}
         {activeIndex === 1 && (
           <div className="absolute left-18 top-[38%]">
-            <Layer onClose={() => setActiveIndex(null)} open={activeIndex} />
+            <Layer onClose={() => onIndex(null)} open={activeIndex} />
           </div>
         )}
         {activeIndex === 4 && (
           <div className="absolute left-18 top-[58%]">
-            <Legends onClose={() => setActiveIndex(null)} open={activeIndex} />
+            <Legends onClose={() => onIndex(null)} open={activeIndex} />
           </div>
         )}
         {activeIndex === 5 && (
-          <WebAppPage onClose={() => setActiveIndex(null)} open={activeIndex} />
+          <WebAppPage onClose={() => onIndex(null)} open={activeIndex} />
         )}
         <div className="pointer-events-auto flex flex-col bg-(--color-background-accent)/75 w-fit h-fit py-10 px-3 gap-8 rounded-lg">
           {SIDEBAR_ITEMS.map((item, id) => (
             <div
               className={`${activeIndex === id && "text-(--color-accent)"} flex w-full h-fit hover:bg-(--color-background-accent)/50 hover:text-(--color-accent)/50 transition-all duration-100`}
               key={id}
-              onClick={() => setActiveIndex(id)}
+              onClick={() => onIndex(id)}
             >
               {item.icon}
             </div>
