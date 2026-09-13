@@ -45,7 +45,7 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
   useEffect(() => {
     // prompt the user to enable their location w/ consent
     const promptUserLocation = async () => {
-      const result = await getUserLocation();
+      const result = await getUserLocation(); // this line sends a prompt to user
       if (!result.success) {
         setError(result.error);
         return;
@@ -59,6 +59,7 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
     promptUserLocation();
   }, []);
 
+  // checks browser if WebGL is enabled/supported
   if (!webglSupported) {
     throw new Error("WebGL is not available in this browser/environment.");
   }
@@ -88,19 +89,24 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
               ],
             },
           });
+
+          // this section renders the points and lines on the map
+          // modify points and lines appearance here
           map.addSource("geojson", {
             type: "geojson",
             data: measureRef.current.geojson,
           });
 
+          // layer for points
           map.addLayer({
             id: "measure-points",
             type: "circle",
             source: "geojson",
-            paint: { "circle-radius": 5, "circle-color": "#000" },
+            paint: { "circle-radius": 5, "circle-color": "#56ae8e" },
             filter: ["in", "$type", "Point"],
           });
 
+          // layer for linestrings
           map.addLayer({
             id: "measure-lines",
             type: "line",
@@ -110,6 +116,7 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
             filter: ["in", "$type", "LineString"],
           });
 
+
           map.on('click', (e) => {
             if (!isMeasuringRef.current) return;
 
@@ -118,10 +125,12 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
             });
             const { geojson, distanceKm } = toggleMeasurePoint(
               measureRef.current,
-              features[0]?.properties?.id,
+              features[0]?.properties?.id, //
               e.lngLat,
             );
 
+            // if there is distance, update the total km text 
+            // distanceRef is where the text lies
             if (distanceRef.current) {
               distanceRef.current.innerHTML = '';
               if (distanceKm !== null) {
@@ -131,17 +140,23 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
               }
             };
 
+            // this call updates both measure-points and measure-line since
+            // they came from the same source (which is geojson) -> map.addLayer({ source: geojson })
             (map.getSource("geojson") as maplibregl.GeoJSONSource).setData(geojson);
           })
 
+
+          // when mouse moves
           map.on("mousemove", (e) => {
             if (!isMeasuringRef.current) {
-              map.getCanvas().style.cursor = "";
+              map.getCanvas().style.cursor = ""; //returns to default cursor 
               return;
             }
+            // update features
             const features = map.queryRenderedFeatures(e.point, {
               layers: ["measure-points"],
             });
+            // change cursor
             map.getCanvas().style.cursor = features.length
               ? "pointer"
               : "crosshair";
@@ -202,14 +217,18 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
   }, [latitude, longitude, locationEnabled]);
 
   useEffect(() => {
+    // attach a ref to isMeasuring
     isMeasuringRef.current = isMeasuring;
 
+    // when the user leaves the measure-distance, clear all 
+    // lines and points
     if (!isMeasuring && mapRef.current) {
-      clearMeasureState(measureRef.current);
+      clearMeasureState(measureRef.current); //clear data
       const source = mapRef.current.getSource("geojson") as
         | maplibregl.GeoJSONSource
         | undefined;
       source?.setData(measureRef.current.geojson);
+      // clear distanceRef
       if (distanceRef.current) distanceRef.current.innerHTML = "";
     }
   }, [isMeasuring]);
@@ -221,7 +240,7 @@ export default function InteractiveMap({ getLiftedMap, isMeasuring }: Interactiv
         <div ref={mapContainer} id="map-canvas" className="w-full h-full" />
         <div
           ref={distanceRef}
-          className="absolute bg-background px-2 py-1 border border-white rounded-lg bottom-10 left-4 pointer-events-none text-white z-10"
+          className={`${!isMeasuring && "hidden"} absolute bg-background px-2 py-1 border border-white rounded-lg bottom-10 left-4 text-sm pointer-events-none text-white z-10`}
         />
       </div>
     </>

@@ -19,6 +19,7 @@ export function createMeasureState() {
     return { geojson, linestring }
 }
 
+// actual logic of measure-distance
 export function toggleMeasurePoint(
     state: ReturnType<typeof createMeasureState>,
     clickedFeatureId: string | undefined,
@@ -26,11 +27,13 @@ export function toggleMeasurePoint(
 ) {
     const { geojson, linestring } = state;
 
-    if (geojson.features.length > 1) geojson.features.pop();
+    if (geojson.features.length > 1) geojson.features.pop(); // remove old linestring
 
     if (clickedFeatureId) {
+        // removes the pin IF the user clicks that existing pin
         geojson.features = geojson.features.filter((p) => p.properties?.id !== clickedFeatureId);
     } else {
+        // create new pin
         geojson.features.push({
             type: 'Feature',
             geometry: {
@@ -43,13 +46,16 @@ export function toggleMeasurePoint(
         });
     }
 
+    // turf.js calculates the distance in km (by default)
     let distanceKm: number | null = null;
+
+    // if there are more than 2 pins, rebuild the line
     if (geojson.features.length > 1) {
         linestring.geometry.coordinates = geojson.features.map(
             p => (p.geometry as GeoJSON.Point).coordinates
         );
-        geojson.features.push(linestring);
-        distanceKm = turf.length(linestring);
+        geojson.features.push(linestring); // creates line
+        distanceKm = turf.length(linestring); // computes distance in km
     }
 
     return { geojson, distanceKm};
