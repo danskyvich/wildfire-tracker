@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import * as maplibregl from "maplibre-gl";
 import { getUserLocation } from '@/app/libs/location/geolocation';
 import Legends from './legends';
+import Layer from "./layers"
+import WebAppPage from './web-app-page';
 
 export default function Sidebar({map}: {map: maplibregl.Map | null}) {
 
@@ -66,13 +68,19 @@ export default function Sidebar({map}: {map: maplibregl.Map | null}) {
   if (!map) return;
     return (
       <>
-      {
-        activeIndex === 1 && (
+        {activeIndex === 1 && (
           <div className="absolute left-18 top-[38%]">
-            <Legends onClose={() => setActiveIndex(null)} open={activeIndex}/>
+            <Layer onClose={() => setActiveIndex(null)} open={activeIndex} />
           </div>
-        )
-      }
+        )}
+        {activeIndex === 4 && (
+          <div className="absolute left-18 top-[58%]">
+            <Legends onClose={() => setActiveIndex(null)} open={activeIndex} />
+          </div>
+        )}
+        {activeIndex === 5 && (
+          <WebAppPage onClose={() => setActiveIndex(null)} open={activeIndex} />
+        )}
         <div className="pointer-events-auto flex flex-col bg-(--color-background-accent)/75 w-fit h-fit py-10 px-3 gap-8 rounded-lg">
           {SIDEBAR_ITEMS.map((item, id) => (
             <div
